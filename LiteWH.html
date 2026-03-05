@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiteWH</title>
+    <meta name="theme-color" content="#1e1e1e" id="meta-theme-color">
+    <style>
+        /* === ОСНОВНІ СТИЛІ === */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1e1e1e; color: #e0e0e0; padding: 0 20px 20px 20px; display: flex; flex-direction: column; align-items: center; margin: 0; transition: background-color 0.3s, color 0.3s; }
+        .container { width: 100%; background: #2d2d30; padding: 20px; border-radius: 10px; box-shadow: 0 8px 16px rgba(0,0,0,0.6); box-sizing: border-box; margin-bottom: 20px; transition: background 0.3s, box-shadow 0.3s; }
+        h2 { text-align: center; color: #4caf50; margin-top: 0; transition: color 0.3s; }
+        h3 { color: #2196F3; border-bottom: 1px solid #444; padding-bottom: 5px; margin-top: 20px; transition: color 0.3s, border-color 0.3s; }
+
+        .tabs-container { position: sticky; top: 0; z-index: 1000; background-color: #1e1e1e; width: 100%; max-width: 500px; display: flex; justify-content: space-between; align-items: center; padding-top: 15px; margin-bottom: 20px; gap: 10px; transition: max-width 0.3s, background-color 0.3s;}
+        .tabs { display: flex; flex: 1; background: #2d2d30; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transition: background 0.3s;}
+        .tab-btn { flex: 1; padding: 12px 2px; text-align: center; cursor: pointer; background: #2d2d30; color: #aaa; font-weight: bold; transition: 0.3s; border-bottom: 3px solid transparent; font-size: 13px; }
+        .tab-btn:hover { background: #3d3d40; color: #fff; }
+        .tab-btn.active { color: #4caf50; border-bottom: 3px solid #4caf50; background: #1e1e1e; }
+        .lang-btn { background: #1a1a1c; color: #fff; border: 1px solid #555; border-radius: 8px; padding: 10px 15px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .lang-btn:hover { background: #3d3d40; border-color: #4caf50; }
+        .tab-content { display: none; width: 100%; }
+        .tab-content.active { display: block; }
+        .content-wrapper { width: 100%; max-width: 500px; margin: 0 auto; transition: max-width 0.3s; }
+
+        .sticky-tx-header { position: sticky; top: 75px; z-index: 900; background: #2d2d30; padding: 15px 20px; margin: -20px -20px 20px -20px; border-radius: 10px 10px 0 0; border-bottom: 2px solid #4caf50; box-shadow: 0 4px 6px rgba(0,0,0,0.5); transition: background 0.3s, border-color 0.3s;}
+
+        .dashboard-cards { display: flex; gap: 15px; margin-bottom: 20px; }
+        .card { background: #1e1e1e; padding: 15px; border-radius: 8px; flex: 1; text-align: center; border-left: 4px solid #4caf50; transition: background 0.3s, border-color 0.3s; }
+        .card.warning { border-left-color: #ff9800; }
+        .card h3 { margin: 0; font-size: 26px; color: #fff; border:none; padding:0; transition: color 0.3s;}
+        .card p { margin: 5px 0 0; font-size: 13px; color: #aaa; transition: color 0.3s;}
+
+        .alert-item { background: #1a1a1c; border: 1px dashed #ff5252; border-radius: 5px; padding: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.3s;}
+        .balances-list { font-size: 14px; color: #ccc; }
+        .balance-item { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #333; padding-bottom: 3px; transition: border-color 0.3s;}
+
+        label { display: block; margin-top: 15px; font-size: 13px; color: #b0b0b0; transition: color 0.3s;}
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #555; border-radius: 5px; background: #1e1e1e; color: #fff; box-sizing: border-box; font-size: 15px; transition: background 0.3s, color 0.3s, border-color 0.3s; resize: vertical;}
+        optgroup { color: #888; font-style: normal; font-weight: bold; }
+        option { color: #fff; padding: 4px; }
+        .flex-row { display: flex; gap: 10px; align-items: flex-end; }
+        .flex-row > div { flex: 1; }
+        button.action-btn { width: 100%; padding: 12px; margin-top: 25px; background: #4caf50; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button.action-btn:hover { background: #45a049; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 14px; }
+        th, td { padding: 10px 5px; text-align: left; border-bottom: 1px solid #444; transition: border-color 0.3s;}
+        .expense { color: #ff5252; } .income { color: #4caf50; } .transfer { color: #2196F3; }
+        .split-subrow { background: #1e1e1e; font-size: 12px; color: #aaa; transition: background 0.3s;}
+        .split-subrow td { border-bottom: none; padding: 4px 10px; }
+
+        .action-cell { white-space: nowrap; display: flex; gap: 5px; align-items: center;}
+        .action-cell button { background: #3d3d40; color: #fff; border: 1px solid #555; font-size: 13px; cursor: pointer; padding: 4px 6px; border-radius: 4px; transition: 0.2s;}
+        .action-cell button:hover { background: #555; transform: scale(1.05); }
+
+        .checkbox-container { display: flex; align-items: center; margin-top: 15px; background: #1e1e1e; padding: 10px; border-radius: 5px; border: 1px solid #555; cursor: pointer; transition: background 0.3s, border-color 0.3s;}
+        .checkbox-container input { width: auto; margin: 0 10px 0 0; transform: scale(1.2); }
+        .checkbox-container label { margin: 0; cursor: pointer; color: #fff; font-weight: bold; transition: color 0.3s;}
+
+        .dict-list { list-style: none; padding: 0; margin: 0 0 15px 0; }
+        .dict-list li { display: flex; justify-content: space-between; background: #1e1e1e; padding: 8px 12px; margin-bottom: 5px; border-radius: 5px; align-items: center; border: 1px solid #333; transition: background 0.3s, border-color 0.3s;}
+        .btn-delete { background: #ff5252 !important; color: white !important; border: none !important; border-radius: 3px; cursor: pointer; padding: 5px 10px; }
+        .btn-add { background: #2196F3; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; width: 100%; margin-bottom: 20px; transition: background 0.3s;}
+
+        .cat-details { background: #1a1a1c; border: 1px solid #333; border-radius: 5px; margin-bottom: 8px; padding: 5px 10px; transition: background 0.3s, border-color 0.3s;}
+        .cat-summary { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 5px 0; outline: none; user-select: none; }
+        .cat-summary::-webkit-details-marker { display: none; }
+        .cat-sublist { list-style: none; padding-left: 15px; margin: 5px 0 0 0; }
+        .cat-sublist li { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-top: 1px dashed #333; font-size: 14px; color: #ccc; border:none; transition: border-color 0.3s, color 0.3s;}
+
+        .sync-btn { width: 100%; padding: 10px; margin-top: 10px; text-align: center; border-radius: 5px; cursor: pointer; font-weight: bold; border:none; color:white; display:block; box-sizing: border-box;}
+
+        .pc-grid-main { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        .pc-col { display: flex; flex-direction: column; flex: 1; }
+        .pc-grid-settings { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+
+        /* СПЛІТ ТА ЗБІРКА (BOM) */
+        .assembly-container { background: #1a1a1c; border-radius: 5px; padding: 10px; margin-top: 10px; border: 1px dashed #2196F3; transition: background 0.3s, border-color 0.3s;}
+        .assembly-row { margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #333; transition: border-color 0.3s;}
+        .btn-add-assembly { background: transparent; border: 1px solid #2196F3; color: #2196F3; padding: 8px; border-radius: 5px; width: 100%; margin-top: 10px; cursor: pointer; transition: border-color 0.3s, color 0.3s;}
+
+        /* === СВІТЛА ТЕМА === */
+        body[data-theme="light"] { background-color: #f4f7f6; color: #333; }
+        body[data-theme="light"] .container { background: #ffffff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #eaeaea; }
+        body[data-theme="light"] h2 { color: #2eb872; }
+        body[data-theme="light"] h3 { color: #ff9f68; border-bottom: 1px solid #eaeaea; }
+        body[data-theme="light"] .tabs-container { background-color: #f4f7f6; }
+        body[data-theme="light"] .tabs { background: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        body[data-theme="light"] .tab-btn { background: #ffffff; color: #888; }
+        body[data-theme="light"] .tab-btn:hover { background: #f9fbfb; color: #333; }
+        body[data-theme="light"] .tab-btn.active { color: #2eb872; border-bottom-color: #2eb872; background: #f4f7f6; }
+        body[data-theme="light"] .lang-btn { background: #ffffff; color: #333; border-color: #ddd; }
+        body[data-theme="light"] .lang-btn:hover { background: #f0f0f0; border-color: #2eb872; }
+        body[data-theme="light"] .sticky-tx-header { background: #ffffff; border-bottom-color: #2eb872; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        body[data-theme="light"] .card { background: #ffffff; border: 1px solid #eaeaea; }
+        body[data-theme="light"] .card { border-left-color: #2eb872; }
+        body[data-theme="light"] .card.warning { border-left-color: #ff9f68; }
+        body[data-theme="light"] .card h3 { color: #333 !important; }
+        body[data-theme="light"] .card p { color: #666; border-bottom-color: #eaeaea; }
+        body[data-theme="light"] .alert-item, body[data-theme="light"] .dict-list li, body[data-theme="light"] .cat-details, body[data-theme="light"] .assembly-container { background: #ffffff; border: 1px solid #eaeaea; color: #333; }
+        body[data-theme="light"] .balance-item, body[data-theme="light"] .cat-sublist li, body[data-theme="light"] .assembly-row, body[data-theme="light"] .last-tx-item { border-bottom-color: #eaeaea !important; color: #333; }
+        body[data-theme="light"] th, body[data-theme="light"] td { border-color: #eaeaea; color: #333; }
+        body[data-theme="light"] input, body[data-theme="light"] select, body[data-theme="light"] textarea { background: #f9fbfb; color: #333; border: 1px solid #ccc; }
+        body[data-theme="light"] label { color: #777; }
+        body[data-theme="light"] .action-btn, body[data-theme="light"] .income { background: #2eb872; color:#fff;}
+        body[data-theme="light"] .income { background: transparent; color:#2eb872; }
+        body[data-theme="light"] .action-btn:hover { background: #259a5e; }
+        body[data-theme="light"] .btn-add, body[data-theme="light"] .transfer { background: #ff9f68; color:#fff;}
+        body[data-theme="light"] .transfer { background: transparent; color:#ff9f68; }
+        body[data-theme="light"] .btn-add:hover { background: #e88c58; }
+        body[data-theme="light"] .action-cell button { background: #f4f7f6; border-color: #ddd; color: #555; }
+        body[data-theme="light"] .action-cell button:hover { background: #e0e0e0; }
+        body[data-theme="light"] .checkbox-container { background: #f4f7f6; border-color: #ddd; }
+        body[data-theme="light"] .checkbox-container label { color: #333; }
+
+        @media (min-width: 850px) {
+            .tabs-container { max-width: 1000px; }
+            .content-wrapper { max-width: 1000px; }
+            .pc-grid-main { flex-direction: row; align-items: flex-start; }
+            .pc-grid-settings { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+            .pc-grid-main .container, .pc-grid-settings .container { max-width: 100%; margin-bottom: 0; }
+            #tab-transactions .container, #tab-reports .container { max-width: 100%; }
+            .sticky-tx-header { top: 75px; }
+        }
+
+        @media print {
+            body { background-color: #ffffff; color: #000000; padding: 0; }
+            .tabs-container, .sync-btn, .btn-add, .btn-delete, .action-btn, .action-cell, .sticky-tx-header, #tab-main, #tab-transactions, #tab-settings { display: none !important; }
+            #tab-reports { display: block !important; }
+            .container { box-shadow: none; background: #ffffff; border: none; margin: 0; padding: 0; max-width: 100% !important; }
+            h2, h3, label, p, td, th { color: #000000 !important; }
+            table { border: 1px solid #ccc; }
+            th, td { border: 1px solid #ccc; padding: 6px; }
+            .last-tx-item { border-bottom: 1px solid #ccc !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="tabs-container">
+        <div class="tabs">
+            <div class="tab-btn active" onclick="switchTab('main')" data-i18n="tab_main">Рух</div>
+            <div class="tab-btn" onclick="switchTab('transactions')" data-i18n="tab_tx">Історія</div>
+            <div class="tab-btn" onclick="switchTab('reports')" data-i18n="tab_rep">Залишки</div>
+            <div class="tab-btn" onclick="switchTab('settings')" data-i18n="tab_set">Налашт.</div>
+        </div>
+        <div style="display: flex; gap: 5px;">
+            <button class="lang-btn" onclick="toggleTheme()" id="theme-btn">🌙</button>
+            <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn">🇬🇧 EN</button>
+        </div>
+    </div>
+
+    <div id="tab-main" class="tab-content active">
+        <div class="content-wrapper pc-grid-main">
+            <div class="pc-col" style="gap: 20px;">
+                <div class="container">
+                    <h2 data-i18n="dash_title">Стан складу</h2>
+
+                    <div class="dashboard-cards">
+                        <div class="card"><h3 id="dash-total-items">0</h3><p data-i18n="dash_items">Всього одиниць</p></div>
+                        <div class="card warning"><h3 id="dash-alerts">0</h3><p data-i18n="dash_alerts">Закінчуються</p></div>
+                    </div>
+
+                    <div id="alerts-container"></div>
+                    <div class="balances-list" id="balances-details" style="margin-top: 15px; padding-top: 5px; background: transparent; border: none;"></div>
+
+                    <h3 style="margin-top:20px; font-size:15px; color:#aaa; border-bottom:1px solid #444; padding-bottom:5px;" data-i18n="dash_last_tx">Останні операції</h3>
+                    <div id="dash-last-txs" style="margin-top: 10px;"></div>
+                </div>
+            </div>
+
+            <div class="pc-col">
+                <div class="container">
+                    <h2 id="form-title" data-i18n="f_title_new">Нова операція</h2>
+                    <div class="flex-row">
+                        <div style="flex:2;"><label data-i18n="f_date">Дата та час</label><input type="datetime-local" id="date" required></div>
+                        <div style="flex:1;"><label data-i18n="f_type">Тип</label>
+                            <select id="type" onchange="toggleFormLogic()">
+                                <option value="in" data-i18n="f_opt_in">Прихід (+)</option>
+                                <option value="out" selected data-i18n="f_opt_out">Списання (-)</option>
+                                <option value="set" data-i18n="f_opt_set">Інвентаризація (=)</option>
+                                <option value="assembly" data-i18n="f_opt_asm">Збірка / Обслуг. (🛠️)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label id="label-item" data-i18n="f_item">Деталь / Товар (поточний залишок)</label>
+                    <select id="item-select" onchange="onItemSelectChange()"></select>
+
+                    <div class="flex-row">
+                        <div style="flex: 1;"><label data-i18n="f_qty">Кількість</label><input type="number" id="qty" step="0.01"></div>
+                        <div style="flex: 2;" id="project-container"><label data-i18n="f_proj">Проєкт (куди пішло)</label><select id="project"></select></div>
+                    </div>
+
+                    <div style="margin-top: 10px;" id="serials-section">
+                        <label data-i18n="tx_serials">Серійні номери (необов'язково)</label>
+                        <div id="tx-serials-input-wrapper">
+                            <div id="tx-serials-container"></div>
+                            <button class="btn-add-assembly" id="btn-add-serial" style="margin-top:5px; border-color:#2196F3; color:#2196F3; padding:6px; font-size:13px;" onclick="addTxSerialInput()" data-i18n="tx_add_serial">+ Додати серійник</button>
+                        </div>
+                        <div id="tx-select-serials-container" style="display:none; margin-top: 5px; background: #1a1a1c; padding: 10px; border-radius: 5px; border: 1px dashed #555;"></div>
+                    </div>
+
+                    <div id="assembly-fields" style="display: none;">
+                        <div class="assembly-container">
+                            <label style="color:#2196F3; margin-top:0; font-weight:bold;" data-i18n="f_asm_title">Витрачені деталі (Складники):</label>
+                            <div id="assembly-items" style="margin-top: 10px;"></div>
+                            <button class="btn-add-assembly" onclick="addAssemblyRow()" data-i18n="f_add_comp">+ Додати складник</button>
+                        </div>
+                    </div>
+
+                    <label data-i18n="f_note">Примітка до операції</label>
+                    <input type="text" id="note" autocomplete="off">
+
+                    <button class="action-btn" id="btn-save" onclick="saveTransaction()" data-i18n="btn_save">Зберегти</button>
+                    <button class="action-btn" id="btn-cancel-edit" style="display:none; background:#555; margin-top:10px;" onclick="cancelEdit()" data-i18n="btn_cancel">Скасувати</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-transactions" class="tab-content">
+        <div class="content-wrapper">
+            <div class="container" style="padding-top: 0;">
+                <div class="sticky-tx-header">
+                    <h2 style="margin-top: 0;" data-i18n="tx_title">Журнал операцій</h2>
+                    <div class="flex-row" style="align-items: center;">
+                        <div style="flex: 1;"><label style="margin-top: 0;" data-i18n="tx_filter">Фільтр по деталі:</label><select id="filter-item" onchange="renderTransactionsTable()"><option value="all" data-i18n="tx_all">📦 Всі позиції</option></select></div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr><th data-i18n="t_date">Дата</th><th data-i18n="t_desc">Опис</th><th data-i18n="t_qty">Кількість</th><th></th></tr>
+                    </thead>
+                    <tbody id="transactions-list"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-reports" class="tab-content">
+        <div class="content-wrapper">
+            <div class="container">
+                <h2 data-i18n="r_title">Поточні залишки на складі</h2>
+                <div class="flex-row" style="margin-top: 15px; margin-bottom: 15px;">
+                    <div style="flex:1;">
+                        <label data-i18n="r_filter_cat">Фільтр за категорією:</label>
+                        <select id="report-cat-filter" onchange="renderReports()">
+                            <option value="all">Всі категорії</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto; margin-top: 15px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #333; color: #fff;">
+                                <th data-i18n="r_cat">Категорія</th>
+                                <th data-i18n="r_name">Найменування / Примітка</th>
+                                <th data-i18n="r_serials">Серійні номери</th>
+                                <th data-i18n="r_loc">Локація</th>
+                                <th style="text-align: right;" data-i18n="r_qty">Залишок</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-report-list"></tbody>
+                    </table>
+                </div>
+
+                <div style="page-break-before: always; margin-top: 40px;">
+                    <h3 style="font-size:16px; color:#aaa; border-bottom:1px solid #444; padding-bottom:5px;" data-i18n="dash_last_tx">Останні операції</h3>
+                    <div id="report-last-txs" style="margin-top: 15px;"></div>
+                </div>
+
+                <button class="action-btn" style="background: #2196F3; margin-top: 30px; color:#fff;" onclick="printReport()" data-i18n="r_pdf">🖨️ Експорт у PDF / Друк</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-settings" class="tab-content">
+        <div class="content-wrapper pc-grid-settings">
+
+            <div class="pc-col" style="gap: 20px;">
+                <div class="container">
+                    <h2 style="color: #4caf50;" data-i18n="s_item_title">База деталей (Номенклатура)</h2>
+                    <div style="background: transparent; padding: 15px; border-radius: 5px; border: 1px dashed #4caf50; margin-bottom: 15px;">
+                        <input type="hidden" id="edit-item-id">
+                        <label data-i18n="s_item_name">Назва деталі / матеріалу</label><input type="text" id="s-item-name">
+                        <div class="flex-row">
+                            <div style="flex: 2;"><label data-i18n="s_cat">Категорія</label><select id="s-item-cat"></select></div>
+                            <div style="flex: 2;"><label data-i18n="s_loc">Локація</label><select id="s-item-loc"></select></div>
+                        </div>
+                        <div class="flex-row">
+                            <div style="flex: 1;"><label data-i18n="s_unit">Од. вим.</label><select id="s-item-unit"></select></div>
+                            <div style="flex: 1;"><label data-i18n="s_min">Мін. залишок</label><input type="number" id="s-item-min" step="0.01" value="0"></div>
+                        </div>
+                        <label data-i18n="s_item_note">Примітка до номенклатури</label>
+                        <textarea id="s-item-note" rows="2" placeholder="Додаткова інформація..."></textarea>
+                        <label class="checkbox-container" style="margin-top: 15px; margin-bottom: 5px;">
+                            <input type="checkbox" id="s-item-show-dash" checked>
+                            <label for="s-item-show-dash" data-i18n="s_item_dash">Показувати в списку на Дашборді</label>
+                        </label>
+                        <button class="btn-add" id="btn-save-item" style="margin-top: 15px; background: #4caf50; color:#fff;" onclick="saveItem()" data-i18n="s_item_add">+ Зберегти деталь</button>
+                        <button class="action-btn" id="btn-cancel-item" style="display:none; background:#555; margin-top:5px; padding: 8px; color:#fff;" onclick="cancelEditItem()" data-i18n="btn_cancel">Скасувати</button>
+                    </div>
+                    <ul class="dict-list" id="list-items"></ul>
+                </div>
+            </div>
+
+            <div class="pc-col" style="gap: 20px;">
+                <div class="container">
+                    <h2 data-i18n="s_dict_title">Довідники</h2>
+                    <h3 data-i18n="s_cat">Категорії</h3>
+                    <div style="background: transparent; padding: 15px; border-radius: 5px; border: 1px dashed #555; margin-bottom: 15px;">
+                        <label>Батьківська категорія</label>
+                        <select id="new-cat-parent"></select>
+                        <div class="flex-row" style="margin-top: 10px;">
+                            <div style="flex: 2;"><input type="text" id="new-cat-name" placeholder="Назва категорії"></div>
+                            <div style="flex: 1;"><button class="btn-add" id="btn-save-cat" style="margin: 0; margin-top: 5px; color:#fff;" onclick="saveCategoryUI()" data-i18n="s_add">+ Додати</button></div>
+                        </div>
+                        <button class="action-btn" id="btn-cancel-cat" style="display:none; background:#555; margin-top:10px; padding: 8px; width: 100%; color:#fff;" onclick="cancelEditCategory()" data-i18n="btn_cancel">Скасувати</button>
+                    </div>
+                    <div id="nested-categories-list"></div>
+
+                    <h3 style="margin-top:30px;" data-i18n="s_loc">Локації</h3>
+                    <ul class="dict-list" id="list-locations"></ul>
+                    <div class="flex-row" style="margin-bottom: 20px;"><div style="flex: 2;"><input type="text" id="add-loc-val"></div><div style="flex: 1;"><button class="btn-add" style="margin: 0; margin-top: 5px; color:#fff;" onclick="addDictItemInput('locations', 'add-loc-val')" data-i18n="s_add">+ Додати</button></div></div>
+
+                    <h3 data-i18n="s_proj">Проєкти</h3>
+                    <ul class="dict-list" id="list-projects"></ul>
+                    <div class="flex-row" style="margin-bottom: 20px;"><div style="flex: 2;"><input type="text" id="add-proj-val"></div><div style="flex: 1;"><button class="btn-add" style="margin: 0; margin-top: 5px; color:#fff;" onclick="addDictItemInput('projects', 'add-proj-val')" data-i18n="s_add">+ Додати</button></div></div>
+
+                    <h3 data-i18n="s_unit">Одиниці виміру</h3>
+                    <ul class="dict-list" id="list-units"></ul>
+                    <div class="flex-row" style="margin-bottom: 20px;"><div style="flex: 2;"><input type="text" id="add-unit-val"></div><div style="flex: 1;"><button class="btn-add" style="margin: 0; margin-top: 5px; color:#fff;" onclick="addDictItemInput('units', 'add-unit-val')" data-i18n="s_add">+ Додати</button></div></div>
+                </div>
+            </div>
+
+            <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 20px; width: 100%;">
+                <div class="container" style="max-width: 100%;"><h2 style="color: #2196F3;" data-i18n="s_sync">Синхронізація (JSON)</h2><div class="pc-grid-main"><div class="pc-col"><button class="sync-btn" style="background: #2196F3; margin-top: 0; color:#fff;" onclick="exportData()" data-i18n="s_exp">⬇️ Експортувати базу</button></div><div class="pc-col"><label for="import-file" class="sync-btn" style="background: #ff9800; margin-top: 0; color:#fff;" data-i18n="s_imp">⬆️ Завантажити базу</label><input type="file" id="import-file" style="display: none;" accept=".json" onchange="importData(event)"></div></div><hr style="border-color: #444; margin: 25px 0;"><h2 style="color: #ff5252;" data-i18n="s_danger">Небезпечна зона</h2><button class="action-btn" style="background: #ff5252; margin-top: 0; color:#fff;" onclick="factoryReset()" data-i18n="s_reset_btn">🧨 Очистити базу</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            ua: { tab_main: "Рух", tab_tx: "Історія", tab_budg: "Бюджети", tab_rep: "Залишки", tab_set: "Налашт.", dash_title: "Стан складу", dash_items: "Всього одиниць", dash_alerts: "Закінчуються", dash_last_tx: "Останні операції", f_title_new: "Нова операція", f_date: "Дата", f_proj: "Проєкт (куди пішло)", f_type: "Тип", f_opt_in: "Прихід (+)", f_opt_out: "Списання (-)", f_opt_set: "Інвентаризація (=)", f_opt_asm: "Збірка / Обслуг. (🛠️)", f_item: "Деталь / Товар (залишок)", f_result_item: "Що отримуємо на виході", f_qty: "Кількість", f_note: "Примітка до операції", f_asm_title: "Витрачені деталі (Складники):", f_add_comp: "+ Додати складник", tx_serials: "Серійні номери (необов'язково)", tx_add_serial: "+ Додати серійник", btn_save: "Зберегти", btn_cancel: "Скасувати", btn_upd: "💾 Оновити", tx_title: "Журнал операцій", tx_filter: "Фільтр:", tx_all: "📦 Всі позиції", t_date: "Дата", t_desc: "Опис", t_qty: "Кіл-сть", r_title: "Поточні залишки на складі", r_filter_cat: "Фільтр за категорією:", r_cat: "Категорія", r_name: "Найменування / Примітка", r_serials: "Серійні номери", r_loc: "Локація", r_qty: "Залишок", r_pdf: "🖨️ Друк / PDF", s_item_title: "База деталей", s_item_name: "Назва", s_cat: "Категорія", s_loc: "Локація", s_unit: "Од. вим.", s_min: "Мін. залишок", s_item_note: "Примітка до номенклатури", s_item_dash: "Показувати в списку на Дашборді", s_item_add: "+ Зберегти", s_dict_title: "Довідники", s_proj: "Проєкти", s_add: "+ Додати", s_sync: "Синхронізація", s_exp: "⬇️ Експорт", s_imp: "⬆️ Імпорт", s_danger: "Небезпечна зона", s_reset_btn: "🧨 Очистити базу", m_warn_reset1: "Видалити весь склад?", m_warn_reset2: "Незворотня дія!", m_reset_ok: "Очищено!", m_err_qty: "Введіть кількість або оберіть серійники!", m_err_item: "Оберіть деталь!", m_err_del: "Видалити?" },
+            en: { tab_main: "Movement", tab_tx: "History", tab_budg: "Budgets", tab_rep: "Stock", tab_set: "Settings", dash_title: "Warehouse Status", dash_items: "Total Units", dash_alerts: "Low Stock", dash_last_tx: "Recent Transactions", f_title_new: "New Entry", f_date: "Date", f_proj: "Project", f_type: "Type", f_opt_in: "Add (+)", f_opt_out: "Take (-)", f_opt_set: "Inventory (=)", f_opt_asm: "Assembly (🛠️)", f_item: "Item (current stock)", f_result_item: "Target Item (Produced)", f_qty: "Quantity", f_note: "Tx Note", f_asm_title: "Consumed Components:", f_add_comp: "+ Add Component", tx_serials: "Serial Numbers (optional)", tx_add_serial: "+ Add Serial", btn_save: "Save", btn_cancel: "Cancel", btn_upd: "💾 Update", tx_title: "Transactions", tx_filter: "Filter:", tx_all: "📦 All Items", t_date: "Date", t_desc: "Description", t_qty: "Qty", r_title: "Current Stock Levels", r_filter_cat: "Filter by Category:", r_cat: "Category", r_name: "Name / Note", r_serials: "Serial Numbers", r_loc: "Location", r_qty: "Stock", r_pdf: "🖨️ Print / PDF", s_item_title: "Item Database", s_item_name: "Name", s_cat: "Category", s_loc: "Location", s_unit: "Unit", s_min: "Min Qty", s_item_note: "Item Note", s_item_dash: "Show on Dashboard list", s_item_add: "+ Save", s_dict_title: "Dictionaries", s_proj: "Projects", s_add: "+ Add", s_sync: "Sync", s_exp: "⬇️ Export", s_imp: "⬆️ Import", s_danger: "Danger", s_reset_btn: "🧨 Reset", m_warn_reset1: "Delete all data?", m_warn_reset2: "Irreversible!", m_reset_ok: "Cleared!", m_err_qty: "Enter quantity or select serials!", m_err_item: "Select item!", m_err_del: "Delete?" }
+        };
+
+        let currentLang = localStorage.getItem('app_lang') || 'ua'; const t = (k) => i18n[currentLang][k] || k;
+        let currentTheme = localStorage.getItem('app_theme') || 'dark';
+
+        let editingItemId = null; let editingTransactionId = null; let editingCatState = null;
+        let globalStock = {}; let globalSerials = {}; let assemblyCounter = 0;
+
+        function applyTheme() { document.body.setAttribute('data-theme', currentTheme); document.getElementById('theme-btn').innerText = currentTheme === 'dark' ? '☀️' : '🌙'; document.getElementById('meta-theme-color').setAttribute('content', currentTheme === 'dark' ? '#1e1e1e' : '#f4f7f6'); }
+        function toggleTheme() { currentTheme = currentTheme === 'dark' ? 'light' : 'dark'; localStorage.setItem('app_theme', currentTheme); applyTheme(); }
+        function toggleLanguage() { currentLang = currentLang === 'ua' ? 'en' : 'ua'; localStorage.setItem('app_lang', currentLang); applyTranslations(); initUI(); }
+        function applyTranslations() { document.getElementById('lang-btn').innerText = currentLang === 'ua' ? '🇬🇧 EN' : '🇺🇦 UA'; document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.getAttribute('data-i18n'); if(el.tagName==='INPUT'||el.tagName==='TEXTAREA') el.placeholder=t(k); else if (el.tagName==='OPTION') el.innerText=t(k); else el.innerText=t(k); }); }
+
+        const defaultSettings = { items: [], categories: [], locations: ["Стелаж 1", "Стіл"], projects: ["Без проєкту"], units: ["шт", "м", "упак"] };
+
+        function getSettings() {
+            let s; try { s = JSON.parse(localStorage.getItem('fix_settings')); } catch(e) { s = null; }
+            if (!s || typeof s !== 'object') s = JSON.parse(JSON.stringify(defaultSettings));
+            if (!Array.isArray(s.items)) s.items = [];
+            if (!Array.isArray(s.locations)) s.locations = defaultSettings.locations;
+            if (!Array.isArray(s.projects)) s.projects = defaultSettings.projects;
+            if (!Array.isArray(s.units)) s.units = defaultSettings.units;
+            if (s.categories && s.categories.length > 0 && typeof s.categories[0] === 'string') { s.categories = s.categories.map(c => ({ name: c, sub: [] })); }
+            if (!Array.isArray(s.categories)) s.categories = [];
+            s.categories = s.categories.map(c => { if (typeof c === 'object' && c !== null && c.name) { if (!Array.isArray(c.sub)) c.sub = []; return c; } return null; }).filter(c => c !== null);
+            return s;
+        }
+
+        function saveSettings(settings) { localStorage.setItem('fix_settings', JSON.stringify(settings)); initUI(); }
+        function safeCall(fn, name="Function") { try { fn(); } catch(e) { console.error(`Error in ${name}:`, e); } }
+        function safeSetHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+        function getLocalDatetime() { const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); return now.toISOString().slice(0, 16); }
+        function formatDatetimeHuman(isoStr) { if(!isoStr) return ''; const d = new Date(isoStr); return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()} <small style="color:#888;">${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}</small>`; }
+
+        function switchTab(tabId) { document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active')); event.target.classList.add('active'); document.getElementById('tab-' + tabId).classList.add('active'); if (tabId === 'main') safeCall(updateDashboard); if (tabId === 'transactions') safeCall(renderTransactionsTable); if (tabId === 'reports') safeCall(renderReports); }
+
+        function calculateStock() {
+            let txs = JSON.parse(localStorage.getItem('fix_txs')) || [];
+            const s = getSettings();
+            globalStock = {}; globalSerials = {};
+            s.items.forEach(i => { globalStock[i.id] = 0; globalSerials[i.id] = []; });
+
+            txs.sort((a, b) => new Date(a.date) - new Date(b.date));
+            txs.forEach(tx => {
+                let sn = tx.serials || [];
+                if (tx.type === 'assembly') {
+                    if (globalStock[tx.itemId] !== undefined) {
+                        globalStock[tx.itemId] += tx.qty;
+                        globalSerials[tx.itemId].push(...sn);
+                    }
+                    if (tx.components) {
+                        tx.components.forEach(c => {
+                            if (globalStock[c.itemId] !== undefined) {
+                                globalStock[c.itemId] -= c.qty;
+                                let cSns = c.serials || [];
+                                if (cSns.length > 0) {
+                                    cSns.forEach(s => { let idx = globalSerials[c.itemId].indexOf(s); if (idx > -1) globalSerials[c.itemId].splice(idx, 1); });
+                                } else if (sn.length > 0) {
+                                    sn.forEach(s => { let idx = globalSerials[c.itemId].indexOf(s); if (idx > -1) globalSerials[c.itemId].splice(idx, 1); });
+                                }
+                            }
+                        });
+                    }
+                } else if (globalStock[tx.itemId] !== undefined) {
+                    if (tx.type === 'in') {
+                        globalStock[tx.itemId] += tx.qty;
+                        globalSerials[tx.itemId].push(...sn);
+                    }
+                    else if (tx.type === 'out') {
+                        globalStock[tx.itemId] -= tx.qty;
+                        if (sn.length > 0) { sn.forEach(s => { let idx = globalSerials[tx.itemId].indexOf(s); if (idx > -1) globalSerials[tx.itemId].splice(idx, 1); }); }
+                    }
+                    else if (tx.type === 'set') {
+                        globalStock[tx.itemId] = tx.qty;
+                        if (sn.length > 0) globalSerials[tx.itemId] = [...sn];
+                    }
+                }
+            });
+        }
+
+        /* === ФОРМА ВВОДУ === */
+        function addTxSerialInput(val = '') {
+            const container = document.getElementById('tx-serials-container');
+            const div = document.createElement('div'); div.className = 'flex-row'; div.style.marginBottom = '5px';
+            div.innerHTML = `<div style="flex: 2;"><input type="text" class="tx-serial-input" placeholder="SN..." value="${val}"></div><div><button class="btn-delete" style="background:#ff5252!important; color:#fff; padding: 10px; margin-top: 5px;" onclick="this.parentElement.parentElement.remove()">✕</button></div>`;
+            container.appendChild(div);
+        }
+
+        function getItemOptionsHTML() {
+            const s = getSettings(); let options = '';
+            s.categories.forEach(cat => {
+                let mainCatName = cat.name; let catItems = s.items.filter(i => i.category === mainCatName);
+                if(catItems.length > 0) { options += `<optgroup label="${mainCatName}">`; catItems.forEach(i => { options += `<option value="${i.id}">${i.name} (${(globalStock[i.id]||0).toFixed(2)} ${i.unit})</option>`; }); options += `</optgroup>`; }
+                if (cat.sub && cat.sub.length > 0) {
+                    cat.sub.forEach(sub => { let fullSubName = `${mainCatName}: ${sub}`; let subItems = s.items.filter(i => i.category === fullSubName);
+                        if(subItems.length > 0) { options += `<optgroup label="↳ ${fullSubName}">`; subItems.forEach(i => { options += `<option value="${i.id}">${i.name} (${(globalStock[i.id]||0).toFixed(2)} ${i.unit})</option>`; }); options += `</optgroup>`; }
+                    });
+                }
+            }); return options;
+        }
+
+        function renderAvailableSerials(txToEditSerials = []) {
+            const type = document.getElementById('type').value;
+            if (type !== 'out') return;
+            const itemId = document.getElementById('item-select').value;
+            const container = document.getElementById('tx-select-serials-container');
+            container.innerHTML = '';
+            if (!itemId) return;
+
+            let availableSerials = [...(globalSerials[itemId] || [])];
+            if (txToEditSerials && txToEditSerials.length > 0) { txToEditSerials.forEach(sn => { if (!availableSerials.includes(sn)) availableSerials.push(sn); }); }
+
+            if (availableSerials.length === 0) { container.innerHTML = '<span style="color:#888; font-size:13px;">Немає серійників для вибору.</span>'; return; }
+
+            let html = '<div style="font-size:12px; color:#aaa; margin-bottom:8px;">Оберіть серійники для списання:</div>';
+            availableSerials.forEach(sn => {
+                let isChecked = (txToEditSerials && txToEditSerials.includes(sn)) ? 'checked' : '';
+                html += `<label class="checkbox-container" style="margin-top:0; margin-bottom:5px; padding: 5px 10px; font-size:14px; background:transparent; border:none; display:flex; align-items:center;"><input type="checkbox" class="tx-serial-checkbox" value="${sn}" onchange="syncQtyWithSerials()" ${isChecked} style="margin-right:10px; transform:scale(1.2);"><span style="margin:0; font-weight:normal; color:#ccc;">${sn}</span></label>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function syncQtyWithSerials() {
+            if (document.getElementById('type').value === 'out') {
+                const checkedCount = document.querySelectorAll('.tx-serial-checkbox:checked').length;
+                if (checkedCount > 0) { document.getElementById('qty').value = checkedCount; }
+            }
+        }
+
+        function onItemSelectChange() { renderAvailableSerials(); }
+
+        function toggleFormLogic() {
+            const type = document.getElementById('type').value; const projCont = document.getElementById('project-container'); const asmFields = document.getElementById('assembly-fields'); const itemLabel = document.getElementById('label-item');
+            const options = getItemOptionsHTML(); const mainSelect = document.getElementById('item-select');
+            const oldMain = mainSelect.value; mainSelect.innerHTML = options; if(oldMain) mainSelect.value = oldMain;
+
+            document.querySelectorAll('.asm-comp-select').forEach(sel => {
+                const old = sel.value; sel.innerHTML = options; if(old) sel.value = old;
+                let rowId = sel.closest('.assembly-row').id.replace('asm-row-', ''); updateAsmRow(rowId);
+            });
+
+            if(type === 'out') {
+                projCont.style.display = 'block'; document.getElementById('tx-serials-input-wrapper').style.display = 'none'; document.getElementById('tx-select-serials-container').style.display = 'block';
+                renderAvailableSerials();
+            } else {
+                projCont.style.display = 'none'; document.getElementById('tx-serials-input-wrapper').style.display = 'block'; document.getElementById('tx-select-serials-container').style.display = 'none';
+            }
+
+            if(type === 'assembly') { asmFields.style.display = 'block'; itemLabel.innerText = t('f_result_item'); if(document.getElementById('assembly-items').children.length === 0) addAssemblyRow(); } else { asmFields.style.display = 'none'; itemLabel.innerText = t('f_item'); }
+        }
+
+        function addAssemblyRow(itemId = '', qty = '', selectedSns = []) {
+            assemblyCounter++; const options = getItemOptionsHTML(); const div = document.createElement('div'); div.className = 'assembly-row'; div.id = `asm-row-${assemblyCounter}`;
+            div.innerHTML = `<div class="flex-row" style="margin-bottom:5px;"><div style="flex: 2;"><select class="asm-comp-select" onchange="updateAsmRow(${assemblyCounter})">${options}</select></div><div style="flex: 1;"><input type="number" class="asm-comp-qty" step="0.01" value="${qty}" placeholder="Кіл-сть"></div><div><button class="btn-delete" style="background:#ff5252!important; color:#fff;" onclick="removeAssemblyRow(${assemblyCounter})">✕</button></div></div><div id="asm-sn-container-${assemblyCounter}" style="font-size:12px; color:#aaa; margin-top:5px; margin-bottom:5px;"></div>`;
+            document.getElementById('assembly-items').appendChild(div); if(itemId) div.querySelector('.asm-comp-select').value = itemId;
+            updateAsmRow(assemblyCounter, selectedSns);
+        }
+        function removeAssemblyRow(id) { document.getElementById(`asm-row-${id}`).remove(); }
+
+        function updateAsmRow(id, selectedSns = []) {
+            const row = document.getElementById(`asm-row-${id}`); if(!row) return;
+            const select = row.querySelector('.asm-comp-select'); const itemId = select.value;
+            const container = document.getElementById(`asm-sn-container-${id}`);
+            let availableSerials = [...(globalSerials[itemId] || [])];
+            selectedSns.forEach(sn => { if(!availableSerials.includes(sn)) availableSerials.push(sn); });
+            if(availableSerials.length > 0) {
+                let html = '<span style="color:#2196F3; margin-right:5px;">Оберіть СН:</span> ';
+                availableSerials.forEach(sn => {
+                    let isChecked = selectedSns.includes(sn) ? 'checked' : '';
+                    html += `<label style="display:inline-block; margin-right:10px; cursor:pointer;"><input type="checkbox" class="asm-comp-sn-cb" value="${sn}" onchange="syncAsmQty(${id})" ${isChecked} style="transform:scale(1.2);"> <span style="margin-left:2px;">${sn}</span></label>`;
+                }); container.innerHTML = html;
+            } else { container.innerHTML = ''; }
+        }
+
+        function syncAsmQty(id) {
+            const row = document.getElementById(`asm-row-${id}`);
+            const checkedCount = row.querySelectorAll('.asm-comp-sn-cb:checked').length;
+            if(checkedCount > 0) { row.querySelector('.asm-comp-qty').value = checkedCount; }
+        }
+
+        function saveTransaction() {
+            const qty = parseFloat(document.getElementById('qty').value); if (isNaN(qty) || qty <= 0) return alert(t('m_err_qty'));
+            const itemId = document.getElementById('item-select').value; if (!itemId) return alert(t('m_err_item'));
+            const type = document.getElementById('type').value;
+
+            let serials = [];
+            if (type === 'out') { document.querySelectorAll('.tx-serial-checkbox:checked').forEach(chk => { serials.push(chk.value); }); }
+            else { document.querySelectorAll('.tx-serial-input').forEach(inp => { let val = inp.value.trim(); if(val) serials.push(val); }); }
+
+            if (type === 'in' || type === 'assembly') {
+                let existing = []; let oldSerials = [];
+                if (editingTransactionId) { let oldTx = (JSON.parse(localStorage.getItem('fix_txs')) || []).find(x => x.id === editingTransactionId); if (oldTx && oldTx.serials) oldSerials = oldTx.serials; }
+                for(let id in globalSerials) { globalSerials[id].forEach(s => { if (!oldSerials.includes(s)) existing.push(s); }); }
+                for(let s of serials) { if (existing.includes(s)) return alert(`Помилка: Серійний номер ${s} вже є на складі! Введіть унікальний.`); }
+            }
+
+            let tx = { id: editingTransactionId ? editingTransactionId : Date.now(), date: document.getElementById('date').value, type: type, qty: qty, itemId: parseInt(itemId), note: document.getElementById('note').value.trim(), serials: serials };
+
+            if (type === 'out') tx.project = document.getElementById('project').value;
+            if (type === 'assembly') {
+                tx.components = []; let inheritedSerials = [];
+                document.querySelectorAll('.assembly-row').forEach(row => {
+                    let cId = parseInt(row.querySelector('.asm-comp-select').value); let cQty = parseFloat(row.querySelector('.asm-comp-qty').value);
+                    let cSns = []; row.querySelectorAll('.asm-comp-sn-cb:checked').forEach(cb => { cSns.push(cb.value); inheritedSerials.push(cb.value); });
+                    if (cId && cQty > 0) tx.components.push({ itemId: cId, qty: cQty, serials: cSns });
+                });
+                if (tx.components.length === 0) return alert("Додайте хоча б один складник для збірки!");
+                if (tx.serials.length === 0 && inheritedSerials.length > 0) { tx.serials = inheritedSerials.slice(0, tx.qty); }
+            }
+            let txs = JSON.parse(localStorage.getItem('fix_txs')) || [];
+            if (editingTransactionId) { const index = txs.findIndex(x => x.id === editingTransactionId); if(index !== -1) txs[index] = tx; } else { txs.push(tx); }
+            localStorage.setItem('fix_txs', JSON.stringify(txs)); cancelEdit(); safeCall(updateDashboard); safeCall(renderTransactionsTable);
+        }
+
+        function editTransaction(id) {
+            document.querySelectorAll('.tab-btn')[0].click(); let txs = JSON.parse(localStorage.getItem('fix_txs')) || []; const tx = txs.find(x => x.id === id); if(!tx) return;
+            editingTransactionId = id; document.getElementById('form-title').innerText = t('btn_upd'); const saveBtn = document.getElementById('btn-save'); saveBtn.innerText = t('btn_upd'); saveBtn.style.background = "#ff9800"; document.getElementById('btn-cancel-edit').style.display = "block";
+
+            document.getElementById('date').value = tx.date; document.getElementById('type').value = tx.type; document.getElementById('item-select').value = tx.itemId;
+            toggleFormLogic();
+
+            document.getElementById('qty').value = tx.qty; document.getElementById('note').value = tx.note || '';
+            if(tx.type === 'out') { document.getElementById('project').value = tx.project || 'Без проєкту'; renderAvailableSerials(tx.serials || []); }
+            else { document.getElementById('tx-serials-container').innerHTML = ''; if (tx.serials && tx.serials.length > 0) { tx.serials.forEach(sn => addTxSerialInput(sn)); } }
+
+            document.getElementById('assembly-items').innerHTML = ''; if(tx.type === 'assembly' && tx.components) { tx.components.forEach(c => addAssemblyRow(c.itemId, c.qty, c.serials || [])); }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingTransactionId = null; document.getElementById('form-title').innerText = t('f_title_new'); const saveBtn = document.getElementById('btn-save'); saveBtn.innerText = t('btn_save'); saveBtn.style.background = "#4caf50"; document.getElementById('btn-cancel-edit').style.display = "none";
+            document.getElementById('date').value = getLocalDatetime(); document.getElementById('qty').value = ''; document.getElementById('note').value = ''; document.getElementById('assembly-items').innerHTML = ''; document.getElementById('tx-serials-container').innerHTML = '';
+            toggleFormLogic();
+        }
+
+        function deleteTransaction(id) { if(confirm(t('m_err_del'))) { let txs = JSON.parse(localStorage.getItem('fix_txs')) || []; txs = txs.filter(x => x.id !== id); localStorage.setItem('fix_txs', JSON.stringify(txs)); safeCall(updateDashboard); safeCall(renderTransactionsTable); } }
+
+        function renderLastMovements(elementId) {
+            let txs = JSON.parse(localStorage.getItem('fix_txs')) || []; txs.sort((a, b) => new Date(b.date) - new Date(a.date)); let last5 = txs.slice(0, 5); let html = ''; const s = getSettings();
+            if (last5.length === 0) { html = `<div style="text-align:center; color:#888; font-size:13px;">Немає операцій</div>`; }
+            else {
+                last5.forEach(tx => {
+                    let item = s.items.find(i => i.id === tx.itemId); let itemName = item ? item.name : 'Видалена деталь'; let unit = item ? item.unit : 'шт';
+                    let dateStr = formatDatetimeHuman(tx.date); let icon = '', colorClass = '', sign = '';
+                    if(tx.type === 'in') { icon = '➕'; colorClass = 'income'; sign = '+'; } if(tx.type === 'out') { icon = '➖'; colorClass = 'expense'; sign = '-'; }
+                    if(tx.type === 'set') { icon = '🟰'; colorClass = 'transfer'; sign = '='; } if(tx.type === 'assembly') { icon = '🛠️'; colorClass = 'income'; sign = '+'; }
+                    let snText = (tx.serials && tx.serials.length > 0) ? ` <span style="color:#2196F3; font-size: 11px;">[SN: ${tx.serials.join(', ')}]</span>` : '';
+                    html += `<div class="last-tx-item" style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:8px 0; font-size:13px; transition: border-color 0.3s;">
+                        <div style="flex:1;"><span style="color:#888; margin-right:8px; font-size:11px;">${dateStr}</span> ${icon} <strong>${itemName}</strong>${snText}</div>
+                        <div class="${colorClass}" style="font-weight:bold; white-space:nowrap;">${sign}${tx.qty} <small>${unit}</small></div>
+                    </div>`;
+                });
+            } safeSetHTML(elementId, html);
+        }
+
+        function updateDashboard() {
+            calculateStock(); const s = getSettings(); let alerts = []; let groupedItems = {}; let totalPhysicalItems = 0;
+            s.items.forEach(i => {
+                let cur = globalStock[i.id] || 0;
+                if (i.showOnDash !== false) { totalPhysicalItems += cur; if (!groupedItems[i.category]) groupedItems[i.category] = []; groupedItems[i.category].push({item: i, cur: cur}); }
+                if (i.minQty > 0 && cur <= i.minQty) alerts.push({item: i, cur: cur});
+            });
+            document.getElementById('dash-total-items').innerText = totalPhysicalItems.toFixed(2).replace(/\.00$/, ''); document.getElementById('dash-alerts').innerText = alerts.length;
+
+            let alertHtml = '';
+            if (alerts.length > 0) {
+                alertHtml = `<div style="font-size:12px; color:#ff5252; text-align:center; margin-bottom:10px; font-weight:bold;">⚠️ ПОТРЕБУЮТЬ ПОПОВНЕННЯ</div>`;
+                alerts.forEach(a => { alertHtml += `<div class="alert-item"><div><strong>${a.item.name}</strong><br><small style="color:#aaa;">${a.item.location}</small></div><div style="color:#ff5252; font-weight:bold;">${a.cur.toFixed(2)} <small>${a.item.unit}</small></div></div>`; });
+            } safeSetHTML('alerts-container', alertHtml);
+
+            let allItemsHtml = '';
+            if (Object.keys(groupedItems).length === 0) { allItemsHtml = `<div style="text-align:center; color:#888; font-size:13px; padding:10px;">Склад порожній або всі позиції приховані.</div>`; }
+            else {
+                for (let cat in groupedItems) {
+                    allItemsHtml += `<div style="font-size:12px; font-weight:bold; color:#2196F3; margin-top:15px; margin-bottom:5px; text-transform:uppercase;">${cat}</div>`;
+                    groupedItems[cat].forEach(data => {
+                        let colorClass = (data.item.minQty > 0 && data.cur <= data.item.minQty) ? 'color:#ff5252;' : '';
+                        let actSns = globalSerials[data.item.id] || []; let ser = (actSns.length > 0) ? `<br><small style="color:#2196F3; font-size: 10px;">S/N: ${actSns.join(', ')}</small>` : '';
+                        allItemsHtml += `<div class="balance-item" style="${colorClass}"><span>${data.item.name} ${ser}<br><small style="color:#aaa; font-size: 11px;">(${data.item.location})</small></span><strong>${data.cur.toFixed(2)} <small>${data.item.unit}</small></strong></div>`;
+                    });
+                }
+            } safeSetHTML('balances-details', allItemsHtml);
+            renderLastMovements('dash-last-txs'); toggleFormLogic();
+        }
+
+        function renderTransactionsTable() {
+            let txs = JSON.parse(localStorage.getItem('fix_txs')) || []; txs.sort((a, b) => new Date(b.date) - new Date(a.date)); const list = document.getElementById('transactions-list'); list.innerHTML = '';
+            const filterId = document.getElementById('filter-item').value; const s = getSettings(); safeCall(calculateStock);
+            txs.forEach(tx => {
+                let item = s.items.find(i => i.id === tx.itemId); if(!item) return;
+                let show = false; if (filterId === 'all' || tx.itemId == filterId) show = true;
+                if (!show && tx.type === 'assembly' && tx.components) { if(tx.components.some(c => c.itemId == filterId)) show = true; }
+                if (!show) return;
+
+                const row = document.createElement('tr'); const projTag = (tx.type === 'out' && tx.project && tx.project !== "Без проєкту") ? `<br><span style="color:#ff9800;font-size:11px;">[${tx.project}]</span>` : ''; const actionBtns = `<td class="action-cell"><button onclick="editTransaction(${tx.id})">✏️</button><button style="color:#fff;" onclick="deleteTransaction(${tx.id})">✕</button></td>`; const prettyDate = formatDatetimeHuman(tx.date);
+                let serTxt = (tx.serials && tx.serials.length > 0) ? `<br><span style="color:#2196F3; font-size: 12px;">S/N: ${tx.serials.join(', ')}</span>` : '';
+
+                if (tx.type === 'assembly') {
+                    const mainTitle = `<strong>${item.name}</strong> <small style="color:#aaa;">(Збірка / Обслуг.)</small><br><small style="color:#888;">${tx.note||''}</small>${serTxt}`;
+                    row.innerHTML = `<td>${prettyDate}</td><td>🛠️ ${mainTitle}</td><td class="income">+${tx.qty} <small>${item.unit}</small></td>${actionBtns}`; list.appendChild(row);
+                    if (tx.components) { tx.components.forEach(c => {
+                        let cItem = s.items.find(i => i.id === c.itemId); if(!cItem) return;
+                        let cSerTxt = (c.serials && c.serials.length > 0) ? ` <span style="color:#2196F3;">[SN: ${c.serials.join(', ')}]</span>` : '';
+                        const subRow = document.createElement('tr'); subRow.className = 'split-subrow'; subRow.innerHTML = `<td></td><td>↳ ${cItem.name}${cSerTxt}</td><td class="expense">-${c.qty} <small>${cItem.unit}</small></td><td></td>`; list.appendChild(subRow);
+                    }); }
+                } else {
+                    let icon = ''; let colorClass = ''; let sign = '';
+                    if(tx.type === 'in') { icon = '➕'; colorClass = 'income'; sign = '+'; } if(tx.type === 'out') { icon = '➖'; colorClass = 'expense'; sign = '-'; } if(tx.type === 'set') { icon = '🟰'; colorClass = 'transfer'; sign = '='; }
+                    const mainTitle = `<strong>${item.name}</strong> <br><small style="color:#888;">${tx.note||''}</small>${serTxt}`;
+                    row.innerHTML = `<td>${prettyDate}</td><td>${icon} ${mainTitle} ${projTag}</td><td class="${colorClass}">${sign}${tx.qty} <small>${item.unit}</small></td>${actionBtns}`; list.appendChild(row);
+                }
+            });
+        }
+
+        /* === НОВІ ЗВІТИ === */
+        function renderReports() {
+            calculateStock(); const s = getSettings();
+            let filterSelect = document.getElementById('report-cat-filter'); let oldVal = filterSelect.value; let catOptions = `<option value="all">Всі категорії</option>`;
+            s.categories.forEach(c => { catOptions += `<option value="${c.name}">${c.name}</option>`; if(c.sub) c.sub.forEach(sub => catOptions += `<option value="${c.name}: ${sub}">↳ ${c.name}: ${sub}</option>`); });
+            safeSetHTML('report-cat-filter', catOptions); if(oldVal) filterSelect.value = oldVal;
+            let currentFilter = filterSelect.value;
+
+            let sortedItems = [...s.items].sort((a,b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name)); let html = '';
+            sortedItems.forEach(i => {
+                if (currentFilter !== 'all' && i.category !== currentFilter) return;
+                let cur = globalStock[i.id];
+                if (cur <= 0) return; // Приховуємо нульові залишки
+                let color = (i.minQty > 0 && cur <= i.minQty) ? '#ff5252' : '';
+                let actSns = globalSerials[i.id] || []; let ser = (actSns.length > 0) ? `<span style="color:#2196F3; font-size: 13px;">${actSns.join('<br>')}</span>` : `<span style="color:#777;">-</span>`;
+                let noteHtml = i.note ? `<br><small style="color:#777; font-size: 11px;"><i>${i.note}</i></small>` : '';
+                html += `<tr style="color:${color}; vertical-align: top;"><td>${i.category}</td><td><strong>${i.name}</strong>${noteHtml}</td><td>${ser}</td><td>${i.location}</td><td style="text-align:right;"><strong>${cur.toFixed(2)}</strong> ${i.unit}</td></tr>`;
+            }); safeSetHTML('inventory-report-list', html); renderLastMovements('report-last-txs');
+        }
+
+        function printReport() {
+            const origTitle = document.title; const now = new Date();
+            const Y = now.getFullYear(); const M = String(now.getMonth() + 1).padStart(2, '0'); const D = String(now.getDate()).padStart(2, '0');
+            const h = String(now.getHours()).padStart(2, '0'); const m = String(now.getMinutes()).padStart(2, '0');
+            document.title = `LiteWH_Report_${Y}-${M}-${D}_${h}-${m}`;
+            window.addEventListener('afterprint', function onAfterPrint() { document.title = origTitle; window.removeEventListener('afterprint', onAfterPrint); });
+            try { window.print(); } finally { setTimeout(() => { document.title = origTitle; }, 3000); }
+        }
+
+        /* === КАТЕГОРІЇ (ДЕРЕВО) === */
+        function getCategoryOptionsHTML() {
+            const s = getSettings(); let html = '';
+            s.categories.forEach(cat => {
+                if (cat.sub && cat.sub.length > 0) { html += `<optgroup label="${cat.name}">`; html += `<option value="${cat.name}">${cat.name}</option>`; cat.sub.forEach(sub => { html += `<option value="${cat.name}: ${sub}">↳ ${sub}</option>`; }); html += `</optgroup>`; }
+                else { html += `<option value="${cat.name}">${cat.name}</option>`; }
+            }); return html;
+        }
+
+        function updateCategoryDropdowns() { const html = getCategoryOptionsHTML(); const catSelect = document.getElementById('s-item-cat'); if(catSelect) { const old = catSelect.value; catSelect.innerHTML = html; catSelect.value = old; } }
+
+        function renderCategoryManager() {
+            const s = getSettings(); let html = '';
+            s.categories.forEach((c, i) => {
+                let subsHTML = ''; if (c.sub) { c.sub.forEach((sub, j) => { subsHTML += `<li><span>↳ ${sub}</span><div class="action-cell"><button onclick="editCategory(${i}, ${j}, event)">✏️</button><button style="background:#ff5252!important; border-color:#ff5252!important; color:#fff;" onclick="deleteCategory(${i}, ${j}, event)">✕</button></div></li>`; }); }
+                html += `<details class="cat-details"><summary class="cat-summary"><span><strong>${c.name}</strong></span><div class="action-cell"><button onclick="editCategory(${i}, null, event)">✏️</button><button style="background:#ff5252!important; border-color:#ff5252!important; color:#fff;" onclick="deleteCategory(${i}, null, event)">✕</button></div></summary><ul class="cat-sublist">${subsHTML}</ul></details>`;
+            }); safeSetHTML('nested-categories-list', html); updateParentCatOptions();
+        }
+
+        function updateParentCatOptions() { const s = getSettings(); safeSetHTML('new-cat-parent', `<option value="">[ --- Немає / Головна --- ]</option>` + s.categories.map(c => `<option value="${c.name}">${c.name}</option>`).join('')); }
+
+        function editCategory(pIdx, sIdx, event) {
+            event.preventDefault(); const s = getSettings(); const p = s.categories[pIdx]; editingCatState = { pIdx: pIdx, sIdx: sIdx, oldParentName: p.name, oldSubName: sIdx !== null ? p.sub[sIdx] : null }; updateParentCatOptions();
+            if (sIdx === null) { document.getElementById('new-cat-parent').value = ''; document.getElementById('new-cat-parent').disabled = true; document.getElementById('new-cat-name').value = p.name; }
+            else { document.getElementById('new-cat-parent').value = p.name; document.getElementById('new-cat-parent').disabled = false; document.getElementById('new-cat-name').value = p.sub[sIdx]; }
+            const btn = document.getElementById('btn-save-cat'); btn.innerText = t('btn_upd'); btn.style.background = "#ff9800"; document.getElementById('btn-cancel-cat').style.display = "inline-block";
+        }
+        function cancelEditCategory() { editingCatState = null; document.getElementById('new-cat-name').value = ''; document.getElementById('new-cat-parent').disabled = false; const btn = document.getElementById('btn-save-cat'); btn.innerText = t('s_add'); btn.style.background = "#2196F3"; document.getElementById('btn-cancel-cat').style.display = "none"; updateParentCatOptions(); }
+
+        function saveCategoryUI() {
+            const parentName = document.getElementById('new-cat-parent').value; const name = document.getElementById('new-cat-name').value.trim(); if(!name) return; const s = getSettings();
+            let cascadeRename = (oldName, newName) => { s.items.forEach(item => { if (item.category === oldName) item.category = newName; }); };
+            if (editingCatState) {
+                if (editingCatState.sIdx === null) { const oldPName = editingCatState.oldParentName; s.categories[editingCatState.pIdx].name = name; cascadeRename(oldPName, name); s.categories[editingCatState.pIdx].sub.forEach(sub => { cascadeRename(`${oldPName}: ${sub}`, `${name}: ${sub}`); }); }
+                else { const oldFullName = `${editingCatState.oldParentName}: ${editingCatState.oldSubName}`; s.categories[editingCatState.pIdx].sub.splice(editingCatState.sIdx, 1); let newParentObj = parentName ? s.categories.find(c => c.name === parentName) : null; if (newParentObj) { if(!newParentObj.sub.includes(name)) newParentObj.sub.push(name); cascadeRename(oldFullName, `${newParentObj.name}: ${name}`); } else { s.categories.push({ name: name, sub: [] }); cascadeRename(oldFullName, name); } }
+                saveSettings(s); cancelEditCategory();
+            } else {
+                if (parentName) { const parent = s.categories.find(c => c.name === parentName); if(parent && !parent.sub.includes(name)) parent.sub.push(name); }
+                else { if(!s.categories.find(c => c.name === name)) s.categories.push({ name: name, sub: [] }); } document.getElementById('new-cat-name').value = ''; saveSettings(s);
+            }
+        }
+        function deleteCategory(parentIndex, subIndex, event) { event.preventDefault(); const s = getSettings(); if(confirm(t('m_err_del'))) { if (subIndex === null) { s.categories.splice(parentIndex, 1); } else { s.categories[parentIndex].sub.splice(subIndex, 1); } saveSettings(s); } }
+
+        /* === БАЗА ДЕТАЛЕЙ === */
+        function renderItemsManager() {
+            const s = getSettings(); updateCategoryDropdowns(); fillSelect('s-item-loc', s.locations); fillSelect('s-item-unit', s.units);
+            safeSetHTML('list-items', s.items.map(i => {
+                let eye = i.showOnDash !== false ? '<span title="Показується на Дашборді">👁️</span>' : '<span style="opacity:0.5;" title="Приховано з Дашборду">🙈</span>';
+                let noteTag = i.note ? `<br><small style="color:#777;"><i>${i.note}</i></small>` : '';
+                return `<li><div style="flex:1;"><strong style="font-size:15px; color:#4caf50;">${i.name}</strong> ${eye} <span style="font-size:12px; color:#aaa; margin-left:10px;">[${i.category}]</span>${noteTag}<br><small style="color:#888;">${i.location} | Мін: ${i.minQty} ${i.unit}</small></div><div class="action-cell"><button onclick="editItem(${i.id})">✏️</button><button style="background:#ff5252!important; border-color:#ff5252!important; color:#fff;" onclick="deleteItem(${i.id})">✕</button></div></li>`
+            }).join(''));
+
+            let filterHtml = `<option value="all">${t('tx_all')}</option>`; s.items.forEach(i => filterHtml += `<option value="${i.id}">${i.name}</option>`);
+            let oldFilter = document.getElementById('filter-item').value; safeSetHTML('filter-item', filterHtml); if(oldFilter) document.getElementById('filter-item').value = oldFilter;
+        }
+
+        function saveItem() {
+            const name = document.getElementById('s-item-name').value.trim(); const cat = document.getElementById('s-item-cat').value; const loc = document.getElementById('s-item-loc').value; const unit = document.getElementById('s-item-unit').value; const min = parseFloat(document.getElementById('s-item-min').value) || 0;
+            const note = document.getElementById('s-item-note').value.trim(); const showDash = document.getElementById('s-item-show-dash').checked;
+
+            if (!name) return; const s = getSettings();
+            if (editingItemId) { const idx = s.items.findIndex(i => i.id === editingItemId); if (idx !== -1) { s.items[idx] = { id: editingItemId, name: name, category: cat, location: loc, unit: unit, minQty: min, note: note, showOnDash: showDash }; } }
+            else { s.items.push({ id: Date.now(), name: name, category: cat, location: loc, unit: unit, minQty: min, note: note, showOnDash: showDash }); }
+            saveSettings(s); cancelEditItem();
+        }
+
+        function editItem(id) {
+            const s = getSettings(); const i = s.items.find(x => x.id === id); if(!i) return; editingItemId = id;
+            document.getElementById('s-item-name').value = i.name; document.getElementById('s-item-cat').value = i.category; document.getElementById('s-item-loc').value = i.location; document.getElementById('s-item-unit').value = i.unit; document.getElementById('s-item-min').value = i.minQty;
+            document.getElementById('s-item-note').value = i.note || ''; document.getElementById('s-item-show-dash').checked = i.showOnDash !== false;
+            const btn = document.getElementById('btn-save-item'); btn.innerText = t('btn_upd'); btn.style.background = "#ff9800"; document.getElementById('btn-cancel-item').style.display = "inline-block"; window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEditItem() {
+            editingItemId = null; document.getElementById('s-item-name').value = ''; document.getElementById('s-item-min').value = '0'; document.getElementById('s-item-note').value = ''; document.getElementById('s-item-show-dash').checked = true;
+            const btn = document.getElementById('btn-save-item'); btn.innerText = t('s_item_add'); btn.style.background = "#4caf50"; document.getElementById('btn-cancel-item').style.display = "none";
+        }
+
+        function deleteItem(id) { if(confirm(t('m_err_del'))) { const s = getSettings(); s.items = s.items.filter(i => i.id !== id); saveSettings(s); } }
+
+        function addDictItemInput(dictName, inputId) { const val = document.getElementById(inputId).value.trim(); if (val !== '') { const s = getSettings(); s[dictName].push(val); saveSettings(s); document.getElementById(inputId).value = '';} }
+        function deleteDictItem(dictName, index) { if (confirm(t('m_err_del'))) { const s = getSettings(); s[dictName].splice(index, 1); saveSettings(s); } }
+        function fillSelect(id, items) { const select = document.getElementById(id); if(!select) return; const currentVal = select.value; select.innerHTML = items.map(i => `<option value="${i}">${i}</option>`).join(''); if(items.includes(currentVal)) select.value = currentVal; }
+
+        function initUI() {
+            applyTheme(); safeCall(applyTranslations); const s = getSettings();
+            safeCall(calculateStock);
+            safeCall(() => { document.getElementById('date').value = getLocalDatetime(); fillSelect('project', s.projects); document.getElementById('tx-serials-container').innerHTML = ''; toggleFormLogic(); }, 'Base Form Selects');
+
+            safeCall(renderCategoryManager); safeCall(renderItemsManager);
+            safeCall(() => { ['locations', 'projects', 'units'].forEach(dict => { if(s[dict]) { safeSetHTML(`list-${dict}`, s[dict].map((item, i) => `<li><span>${item}</span><button class="btn-delete" style="background:#ff5252!important; color:#fff;" onclick="deleteDictItem('${dict}', ${i})">✕</button></li>`).join('')); } }); }, 'Other Lists');
+            safeCall(updateDashboard); safeCall(renderTransactionsTable); safeCall(renderReports);
+        }
+
+        function exportData() { const data = { transactions: JSON.parse(localStorage.getItem('fix_txs')) || [], settings: getSettings() }; const blob = new Blob([JSON.stringify(data)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; const now = new Date(); const Y = now.getFullYear(); const M = String(now.getMonth() + 1).padStart(2, '0'); const D = String(now.getDate()).padStart(2, '0'); const h = String(now.getHours()).padStart(2, '0'); const m = String(now.getMinutes()).padStart(2, '0'); a.download = `LiteWH_${Y}-${M}-${D}_${h}-${m}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
+        function importData(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { const data = JSON.parse(e.target.result); if (data.transactions && data.settings) { localStorage.setItem('fix_txs', JSON.stringify(data.transactions)); saveSettings(data.settings); alert("OK!"); } } catch (error) { alert("Error!"); } event.target.value = ''; }; reader.readAsText(file); }
+        function factoryReset() { if (confirm(t('m_warn_reset1'))) { if (confirm(t('m_warn_reset2'))) { localStorage.removeItem('fix_txs'); localStorage.removeItem('fix_settings'); alert(t('m_reset_ok')); location.reload(); } } }
+
+        initUI();
+    </script>
+</body>
+</html>
